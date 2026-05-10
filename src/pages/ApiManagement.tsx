@@ -79,11 +79,11 @@ export default function ApiManagement() {
               </p>
               <div className="bg-white rounded-lg p-4">
                 <p className="text-sm text-gray-600 mb-2">请求示例：</p>
-                <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                  curl -X POST https://api.example.com/v1/tasks \
-                  -H "Authorization: Bearer YOUR_API_KEY" \
-                  -H "Content-Type: application/json" \
-                  -d '{"target": "Tesla", "dimensions": ["product"]}'
+                <code className="text-xs bg-gray-100 px-2 py-1 rounded block">
+curl -X POST https://api.example.com/v1/tasks \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"target": "Tesla", "dimensions": ["product"]}'
                 </code>
               </div>
             </div>
