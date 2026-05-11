@@ -1,27 +1,19 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { apiKeyApi } from '@/services/api';
 import type { ApiKey } from '@/types';
-import {
-  Key,
-  Plus,
-  Copy,
-  Trash2,
-  Loader2,
-  CheckCircle,
-  Clock,
-} from 'lucide-react';
+import { Key, Plus, Copy, Trash2, Loader2, CheckCircle, Clock } from 'lucide-react';
 
 export default function ApiManagement() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     loadApiKeys();
   }, []);
 
-  const loadApiKeys = async () => {
+  const loadApiKeys = async (): Promise<void> => {
     try {
       const data = await apiKeyApi.getApiKeys();
       setApiKeys(data);
@@ -32,16 +24,20 @@ export default function ApiManagement() {
     }
   };
 
-  const handleCopy = (keyId: string, keyPreview: string) => {
-    navigator.clipboard.writeText(keyPreview);
-    setCopiedId(keyId);
-    setTimeout(() => setCopiedId(null), 2000);
+  const handleCopy = async (keyId: string, keyPreview: string): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(keyPreview);
+      setCopiedId(keyId);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy API key:', error);
+    }
   };
 
-  const handleToggleActive = (keyId: string) => {
-    setApiKeys(
-      apiKeys.map((k) =>
-        k.id === keyId ? { ...k, is_active: !k.is_active } : k
+  const handleToggleActive = (keyId: string): void => {
+    setApiKeys((prev) =>
+      prev.map((item) =>
+        item.id === keyId ? { ...item, is_active: !item.is_active } : item
       )
     );
   };
@@ -55,6 +51,7 @@ export default function ApiManagement() {
             <p className="text-sm text-gray-500 mt-1">管理API密钥和Webhook配置</p>
           </div>
           <button
+            type="button"
             onClick={() => setShowCreateModal(true)}
             className="btn-primary flex items-center gap-2"
           >
@@ -70,19 +67,24 @@ export default function ApiManagement() {
             <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
               <Key className="w-6 h-6 text-primary-600" />
             </div>
+
             <div className="flex-1">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">API接入说明</h2>
               <p className="text-sm text-gray-600 mb-4">
                 通过API可以将竞品分析功能集成到您的内部系统。使用下方的API密钥进行身份验证。
               </p>
+
               <div className="bg-white rounded-lg p-4">
                 <p className="text-sm text-gray-600 mb-2">请求示例：</p>
-                <pre className="text-xs bg-gray-100 px-2 py-1 rounded whitespace-pre-wrap">
-curl -X POST https://api.example.com/v1/tasks
-  -H "Authorization: Bearer YOUR_API_KEY"
-  -H "Content-Type: application/json"
-  -d '{"target": "Tesla", "dimensions": ["product"]}'
-                </pre>
+                <div className="text-xs bg-gray-100 px-2 py-2 rounded whitespace-pre-wrap overflow-x-auto font-mono">
+                  {'curl -X POST https://api.example.com/v1/tasks'}
+                  <br />
+                  {'  -H "Authorization: Bearer YOUR_API_KEY"'}
+                  <br />
+                  {'  -H "Content-Type: application/json"'}
+                  <br />
+                  {"  -d '{\"target\": \"Tesla\", \"dimensions\": [\"product\"]}'"}
+                </div>
               </div>
             </div>
           </div>
@@ -90,6 +92,7 @@ curl -X POST https://api.example.com/v1/tasks
 
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">API密钥</h2>
+
           {loading ? (
             <div className="flex items-center justify-center h-32">
               <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
@@ -103,13 +106,17 @@ curl -X POST https://api.example.com/v1/tasks
                       <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                         <Key className="w-6 h-6 text-gray-600" />
                       </div>
+
                       <div>
                         <h3 className="font-medium text-gray-900">{apiKey.name}</h3>
+
                         <div className="flex items-center gap-2 mt-1">
                           <code className="text-sm text-gray-600 font-mono">
                             {apiKey.key_preview}
                           </code>
+
                           <button
+                            type="button"
                             onClick={() => handleCopy(apiKey.id, apiKey.key_preview)}
                             className="p-1 hover:bg-gray-100 rounded transition-colors"
                           >
@@ -122,6 +129,7 @@ curl -X POST https://api.example.com/v1/tasks
                         </div>
                       </div>
                     </div>
+
                     <div className="flex items-center gap-4">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -134,21 +142,29 @@ curl -X POST https://api.example.com/v1/tasks
                           {apiKey.is_active ? '启用' : '禁用'}
                         </span>
                       </label>
-                      <button className="p-2 hover:bg-gray-100 rounded text-red-600 transition-colors">
+
+                      <button
+                        type="button"
+                        className="p-2 hover:bg-gray-100 rounded text-red-600 transition-colors"
+                      >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
+
                   <div className="mt-4 flex items-center gap-6 text-sm text-gray-500">
                     <span className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
-                      创建于 {new Date(apiKey.created_at).toLocaleDateString('zh-CN')}
+                      {'创建于 '}
+                      {new Date(apiKey.created_at).toLocaleDateString('zh-CN')}
                     </span>
-                    {apiKey.last_used && (
+
+                    {apiKey.last_used ? (
                       <span>
-                        最后使用: {new Date(apiKey.last_used).toLocaleDateString('zh-CN')}
+                        {'最后使用: '}
+                        {new Date(apiKey.last_used).toLocaleDateString('zh-CN')}
                       </span>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               ))}
@@ -161,42 +177,44 @@ curl -X POST https://api.example.com/v1/tasks
           <p className="text-sm text-gray-600 mb-4">
             配置Webhook URL，系统将在任务状态变化时向该URL发送通知。
           </p>
+
           <div className="flex gap-4">
             <input
               type="text"
               placeholder="https://your-webhook-url.com/webhook"
               className="input-field flex-1"
             />
-            <button className="btn-primary">保存</button>
+            <button type="button" className="btn-primary">
+              保存
+            </button>
           </div>
         </div>
       </div>
 
-      {showCreateModal && (
+      {showCreateModal ? (
         <CreateApiKeyModal
           onClose={() => setShowCreateModal(false)}
-          onCreated={(name) => {
+          onCreated={(name: string) => {
             console.log('Create API key:', name);
             setShowCreateModal(false);
           }}
         />
-      )}
+      ) : null}
     </div>
   );
 }
 
-function CreateApiKeyModal({
-  onClose,
-  onCreated,
-}: {
+type CreateApiKeyModalProps = {
   onClose: () => void;
   onCreated: (name: string) => void;
-}) {
-  const [name, setName] = useState('');
+};
 
-  const handleSubmit = () => {
-    if (name) {
-      onCreated(name);
+function CreateApiKeyModal({ onClose, onCreated }: CreateApiKeyModalProps) {
+  const [name, setName] = useState<string>('');
+
+  const handleSubmit = (): void => {
+    if (name.trim()) {
+      onCreated(name.trim());
     }
   };
 
@@ -224,12 +242,13 @@ function CreateApiKeyModal({
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
-          <button onClick={onClose} className="btn-secondary">
+          <button type="button" onClick={onClose} className="btn-secondary">
             取消
           </button>
           <button
+            type="button"
             onClick={handleSubmit}
-            disabled={!name}
+            disabled={!name.trim()}
             className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             创建
